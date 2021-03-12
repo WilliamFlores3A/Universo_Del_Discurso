@@ -34,6 +34,8 @@ create table Mascota(
 create table Reserva(
 	ID_Reserva Numeric(8) not null,
 	Fecha_Reserva Date not null,
+	Hora_Reserva time not null,
+	ID_Limite numeric(8) not null,
 	Descripcion char(256) not null,
 	constraint PK_Reserva primary key (ID_Reserva)
 );
@@ -120,7 +122,11 @@ create table Proveedor(
 	Direccion_Proveedor char(256) not null,
 	constraint PK_Proveedor primary key (ID_Proveedor)
 );
-
+create table Limite(
+	ID_Limite numeric(8) not null,
+	Limite_Cantidad int not null,
+	constraint PK_Limite primary key (ID_Limite)
+);
 alter table Vacuna
 	add constraint FK_Vacuna_DetalleVacuna foreign key (ID_Detalle_Vacuna)
 	references Detalle_Vacuna (ID_Detalle_Vacuna)
@@ -185,7 +191,12 @@ alter table Compra
 	add constraint FK_Compra_Proveedor foreign key (ID_Proveedor)
 	references Proveedor (ID_Proveedor)
 	on delete restrict on update restrict;
-
+	
+alter table Reserva
+	add constraint FK_Reserva_Limite foreign key (ID_Limite)
+	references Limite (ID_Limite)
+	on delete restrict on update restrict;
+	
 insert into Veterinario values (00000001,'William Flores');
 insert into Veterinario values (00000002,'Agustin Intriago');
 
@@ -195,7 +206,9 @@ insert into Detalle_Vacuna values (00000002,'1ml','Moquillo');
 insert into Cliente values (00000001,'Andres Carlos','Gonzales Cedeño','Masculino','Manta Av.24 calle 13',09949460,'18/12/2020',0,'18/12/2020',2);
 insert into Cliente values (00000002,'Sergio Ivan','Zabala Intriago','Masculino','Manta Av.12 calle 118',09949467,'11/12/2020',0,'11/12/2020',1);
 
-insert into Reserva values (00000001,'23/12/2020','La mascota Sabrina tiene una cita apartada');
+insert into Limite values (00000001,9);
+
+insert into Reserva values (00000001,'23/12/2020','17:34:00',00000001,'La mascota Sabrina tiene una cita apartada');
 
 
 insert into Vacuna values (00000001,'18/12/2020','18/12/2020',00000001,00000002);
@@ -223,54 +236,4 @@ insert into Compra values (00000001,00000001,'28/11/2020');
 
 insert into Compra_Detalle values (00000001,00000001,00000001,'Reabastecimiento de stock',1,12);
 insert into Compra_Detalle values (00000002,00000002,00000001,'Reabastecimiento de stock',1,24);
-
---Cantidad de veces que cada cliente ha visitado el centro.--
-	SELECT
-	  cliente.ci_cliente as identificacion, 
-	  cliente.nombre, 
-	  mascota.nombre_mascota, 
-	  vacuna.fecha_aplicada as Dia_de_vacunacion, 
-	  consulta.fecha_consulta, 
-	  cliente.fecha_registro, 
-	  venta.fecha_venta
-	FROM 
-	public.mascota
-	  INNER JOIN public.cliente ON cliente.ci_cliente = mascota.ci_cliente
-	  INNER JOIN public.consulta ON consulta.id_consulta = mascota.id_consulta 
-	  INNER JOIN public.reserva ON reserva.id_reserva = mascota.id_reserva
-	  INNER JOIN public.vacuna ON vacuna.id_vacuna = mascota.id_vacuna 
-	  INNER JOIN public.venta ON venta.ci_cliente = cliente.ci_cliente
-	WHERE 
-	 cliente.ci_cliente = '00000001';
- 
---Cantidad de vacunas que una mascota ha tenido. --	
-  SELECT 
-  cliente.nombre as Dueño, 
-  mascota.nombre_mascota, 
-  vacuna.fecha_aplicada, 
-  vacuna.id_vacuna, 
-  vacuna.id_detalle_vacuna,
-  detalle_vacuna.vacuna_nombre as Vacuna
-  FROM 
-  public.mascota 
-	  INNER JOIN public.cliente ON cliente.ci_cliente = mascota.ci_cliente
-	  INNER JOIN public.vacuna ON vacuna.id_vacuna = mascota.id_vacuna
-	  INNER JOIN public.veterinario ON veterinario.id_veterinario = vacuna.id_veterinario
-	  INNER JOIN public.detalle_vacuna ON vacuna.id_detalle_vacuna = detalle_vacuna.id_detalle_vacuna
-  WHERE 
-  mascota.id_mascota = '00000002';
-  
---Cantidad de vacunas que cada veterinario ha puesto.--
-  SELECT 
-  	veterinario.veterinario_nombre, 
-  	vacuna.id_vacuna,
-  	vacuna.fecha_aplicada, 
-  	detalle_vacuna.vacuna_nombre as Vacuna
-  FROM 
-  public.mascota
-    inner join public.vacuna on vacuna.id_vacuna = mascota.id_vacuna
-    inner join public.veterinario on veterinario.id_veterinario = vacuna.id_veterinario
-    inner join public.detalle_vacuna ON vacuna.id_detalle_vacuna = detalle_vacuna.id_detalle_vacuna
-  WHERE 
-  veterinario.id_veterinario = '00000002';
   
